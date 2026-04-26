@@ -410,7 +410,7 @@ def calculate_trip(total_miles, current_cycle_used, avg_speed=55):
             'start_hour': total_hours_elapsed,
             'duration': drive_hours,
             'miles_from_start': miles_driven,
-            'drive_miles': drive_miles,  # ✅ FIXED: was missing before
+            'drive_miles': drive_miles,  #  FIXED: was missing before
             'day': day,
             'description': f'Driving {drive_miles:.0f} miles ({drive_hours:.1f} hrs)'
         })
@@ -446,7 +446,7 @@ def calculate_trip(total_miles, current_cycle_used, avg_speed=55):
         'total_trip_hours': total_hours_elapsed,
         'total_days': day,
         'avg_speed': avg_speed,
-        'miles_per_day': miles_per_day,  # ✅ FIXED: added for log sheets
+        'miles_per_day': miles_per_day,  #  FIXED: added for log sheets
     }
 
 
@@ -470,7 +470,7 @@ def generate_daily_logs(trip_data):
                 'driving': [],
                 'on_duty_not_driving': [],
                 'sleeper_berth': [],
-                'total_miles': round(miles_per_day.get(day, 0)),  # ✅ FIXED
+                'total_miles': round(miles_per_day.get(day, 0)),  #  FIXED
                 'remarks': []
             }
 
@@ -496,4 +496,4 @@ def generate_daily_logs(trip_data):
             log['on_duty_not_driving'].append({'start': start, 'end': end})
             log['remarks'].append(f"{stop['description']}: {stop['location']}")
 
-    return list(daily_logs.values())
+    return list(daily_logs.values())                                                               
