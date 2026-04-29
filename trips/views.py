@@ -8,7 +8,7 @@ import requests
 @api_view(['POST'])
 def calculate_route(request):
     """
-    Main API endpoint — trip details leke route + logs return karta hai
+    Main API endpoint —  Get trip details return  route + logs 
     POST /api/calculate-route/
     """
     try:
@@ -73,10 +73,10 @@ def calculate_route(request):
 
 def get_route_data(current_location, pickup_location, dropoff_location):
     """
-    OpenRouteService se route data fetch karo (Free API)
+   Fetch data  from  OpenRouteService  (Free API)
     """
     try:
-        # Geocoding — location names ko coordinates mein convert karo
+        #  — convert location names to coordinates
         def geocode(location_name):
             url = f"https://nominatim.openstreetmap.org/search"
             params = {
