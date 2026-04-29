@@ -14,7 +14,7 @@ HOS Calculator — 70hr/8day Property Carrier Rules
 
 def calculate_trip(total_miles, current_cycle_used, avg_speed=55):
     """
-    Main function — trip ka poora schedule calculate karta hai.
+    Main function —  caluclate a complete a sehudule of trip
     Returns: list of stops/segments with timing
     """
     stops = []
@@ -212,10 +212,10 @@ def calculate_trip(total_miles, current_cycle_used, avg_speed=55):
 
 def generate_daily_logs(trip_data):
     """
-    Daily log sheets generate karta hai — har din ke liye ek sheet
+    generate daily logs   — every day  a one sheet
     Returns: list of daily log entries for ELD drawing
-    BUG FIX #3: off_duty aur sleeper_berth alag alag handle ho rahe hain
-    BUG FIX #4: total_miles correctly populate ho raha hai
+    BUG FIX #3: off_duty aur sleeper_berth handel seprately
+    BUG FIX #4:  correctly populate total_miles
     """
     stops = trip_data['stops']
     miles_per_day = trip_data.get('miles_per_day', {})
