@@ -9,15 +9,53 @@ HOS Calculator — 70hr/8day Property Carrier Rules
 - 1 hour for pickup and dropoff
 """
 
+# =========================
+# VALIDATION FUNCTION
+# =========================
+def validate_input(total_miles, current_cycle_used, avg_speed):
 
+    if not isinstance(total_miles, (int, float)):
+        return "INVALID_INPUT: total_miles must be a number"
+
+    if not isinstance(current_cycle_used, (int, float)):
+        return "INVALID_INPUT: current_cycle_used must be a number"
+
+    if not isinstance(avg_speed, (int, float)):
+        return "INVALID_INPUT: avg_speed must be a number"
+
+    if total_miles <= 0:
+        return "INVALID_INPUT: total_miles must be greater than 0"
+
+    if current_cycle_used < 0 or current_cycle_used > 70:
+        return "INVALID_INPUT: current_cycle_used must be 0-70"
+
+    if avg_speed <= 0 or avg_speed > 100:
+        return "INVALID_INPUT: avg_speed must be 1-100"
+
+    return None
+
+
+# =========================
+# MAIN CALCULATOR
+# =========================
 def calculate_trip(total_miles, current_cycle_used, avg_speed=55):
+
+    # ---- VALIDATION ----
+    error = validate_input(total_miles, current_cycle_used, avg_speed)
+    if error:
+        return {
+            "error": error,
+            "stops": [],
+            "total_miles": 0,
+            "total_trip_hours": 0,
+            "total_days": 0
+        }
 
     stops = []
     remaining_miles = total_miles
     miles_driven = 0
     total_hours_elapsed = 0
 
-    # Current day tracking
     hours_driven_today = 0
     hours_on_duty_today = 0
     hours_since_last_break = 0
@@ -26,7 +64,7 @@ def calculate_trip(total_miles, current_cycle_used, avg_speed=55):
 
     day = 1
 
-    # --- PICKUP ---
+    # ---- PICKUP ----
     stops.append({
         'type': 'pickup',
         'location': 'Pickup Location',
@@ -41,29 +79,28 @@ def calculate_trip(total_miles, current_cycle_used, avg_speed=55):
     hours_on_duty_today += 1
     cycle_hours_used += 1
 
-    # --- MAIN LOOP ---
+    # =========================
+    # MAIN LOOP
+    # =========================
     while remaining_miles > 0:
 
-        # --- 70hr cycle reset ---
-        if cycle_hours_used >= 70:
-            reset_duration = 34
+        # safety (avoid infinite loop)
+        if remaining_miles < 0:
+            break
 
+        # ---- 70 HR RESET ----
+        if cycle_hours_used >= 70:
             stops.append({
                 'type': 'cycle_reset',
                 'location': f'Rest Area — Mile {miles_driven:.0f}',
                 'start_hour': total_hours_elapsed,
-                'duration': reset_duration,
+                'duration': 34,
                 'miles_from_start': miles_driven,
                 'day': day,
                 'description': '34-hour restart'
             })
 
-            prev_hours = total_hours_elapsed
-            total_hours_elapsed += reset_duration
-
-            # ✅ FIXED day calculation
-            days_passed = int(total_hours_elapsed // 24) - int(prev_hours // 24)
-            day += max(1, days_passed)
+            total_hours_elapsed += 34
 
             cycle_hours_used = 0
             hours_driven_today = 0
@@ -71,21 +108,19 @@ def calculate_trip(total_miles, current_cycle_used, avg_speed=55):
             hours_since_last_break = 0
             continue
 
-        # --- 14 hr window ---
+        # ---- 14 HOUR RULE ----
         if hours_on_duty_today >= 14:
-            off_duration = 10
-
             stops.append({
                 'type': 'sleep',
                 'location': f'Rest Stop — Mile {miles_driven:.0f}',
                 'start_hour': total_hours_elapsed,
-                'duration': off_duration,
+                'duration': 10,
                 'miles_from_start': miles_driven,
                 'day': day,
                 'description': '10-hour off duty'
             })
 
-            total_hours_elapsed += off_duration
+            total_hours_elapsed += 10
             day += 1
 
             hours_driven_today = 0
@@ -93,21 +128,19 @@ def calculate_trip(total_miles, current_cycle_used, avg_speed=55):
             hours_since_last_break = 0
             continue
 
-        # --- 11 hr driving limit ---
+        # ---- 11 HOUR DRIVING LIMIT ----
         if hours_driven_today >= 11:
-            off_duration = 10
-
             stops.append({
                 'type': 'sleep',
                 'location': f'Rest Stop — Mile {miles_driven:.0f}',
                 'start_hour': total_hours_elapsed,
-                'duration': off_duration,
+                'duration': 10,
                 'miles_from_start': miles_driven,
                 'day': day,
-                'description': '10-hour off duty (11hr limit)'
+                'description': '11hr limit rest'
             })
 
-            total_hours_elapsed += off_duration
+            total_hours_elapsed += 10
             day += 1
 
             hours_driven_today = 0
@@ -115,7 +148,7 @@ def calculate_trip(total_miles, current_cycle_used, avg_speed=55):
             hours_since_last_break = 0
             continue
 
-        # --- 30 min break after 8 hrs driving ---
+        # ---- 30 MIN BREAK ----
         if hours_since_last_break >= 8:
             stops.append({
                 'type': 'rest',
@@ -130,12 +163,10 @@ def calculate_trip(total_miles, current_cycle_used, avg_speed=55):
             total_hours_elapsed += 0.5
             hours_on_duty_today += 0.5
             cycle_hours_used += 0.5
-
-            # ✅ RESET BREAK COUNTER
             hours_since_last_break = 0
             continue
 
-        # --- Fuel stop ---
+        # ---- FUEL STOP ----
         if miles_since_fuel >= 1000:
             stops.append({
                 'type': 'fuel',
@@ -150,14 +181,11 @@ def calculate_trip(total_miles, current_cycle_used, avg_speed=55):
             total_hours_elapsed += 0.5
             hours_on_duty_today += 0.5
             cycle_hours_used += 0.5
-
             miles_since_fuel = 0
-
-            # ✅ IMPORTANT FIX
             hours_since_last_break = 0
             continue
 
-        # --- Driving calculation ---
+        # ---- DRIVING ----
         max_drive = min(
             11 - hours_driven_today,
             14 - hours_on_duty_today,
@@ -176,12 +204,11 @@ def calculate_trip(total_miles, current_cycle_used, avg_speed=55):
             'start_hour': total_hours_elapsed,
             'duration': drive_hours,
             'miles_from_start': miles_driven,
-            'miles_driven': drive_miles,  # ✅ FIX
+            'miles_driven': drive_miles,
             'day': day,
             'description': f'Driving {drive_miles:.0f} miles'
         })
 
-        # Update counters
         miles_driven += drive_miles
         remaining_miles -= drive_miles
         total_hours_elapsed += drive_hours
@@ -192,7 +219,7 @@ def calculate_trip(total_miles, current_cycle_used, avg_speed=55):
         cycle_hours_used += drive_hours
         miles_since_fuel += drive_miles
 
-    # --- DROPOFF ---
+    # ---- DROPOFF ----
     stops.append({
         'type': 'dropoff',
         'location': 'Dropoff Location',
@@ -214,6 +241,9 @@ def calculate_trip(total_miles, current_cycle_used, avg_speed=55):
     }
 
 
+# =========================
+# DAILY LOGS GENERATOR
+# =========================
 def generate_daily_logs(trip_data):
 
     stops = trip_data['stops']
