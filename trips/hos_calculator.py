@@ -235,7 +235,7 @@ def generate_daily_logs(trip_data):
             }
 
         log = daily_logs[day]
-        start = stop['start_hour'] % 24  # convert to time of day (0-24)
+        start = stop['start_hour'] % 24  # convert to time of day  (0-24)
         end = start + stop['duration']
         end = min(end, 24)  # clamp to 24 hours
 
